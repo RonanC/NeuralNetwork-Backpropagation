@@ -10,7 +10,8 @@ public class Runner {
 	private int outputNum = 1;
 	private double target = 1;
 	private double learningRate = 0.5;
-	double errorThreshold = 0.05;
+	double errorThreshold = 0.0001;
+	// 257113, 36825
 
 	// lists
 	ArrayList<Node> inputs = new ArrayList<Node>();
@@ -18,67 +19,120 @@ public class Runner {
 	ArrayList<Node> outputs = new ArrayList<Node>();
 	ArrayList<Connection> inputConnections = new ArrayList<Connection>();
 	ArrayList<Connection> hiddenConnections = new ArrayList<Connection>();
-
+	ArrayList<TrainingSet> setAnd = new ArrayList<TrainingSet>();
+	ArrayList<TrainingSet> setOr = new ArrayList<TrainingSet>();
+	ArrayList<TrainingSet> setXor = new ArrayList<TrainingSet>();
+	
 	// misc
 	private Random random = new Random();
 	int nodeCount, connectionCount;
 	int epochCount = 0;
 	double sum, value, euler;
 	double difference;
+	double sumSquaredErrors;
 
 	public Runner() {
 		createNodes();
 		createConnections();
 
-		 displayAll();
-//		displayHiddenShort();
+		// set training sets
+		genAndSet();
+		genOrSet();
+		genXorSet();
 
+//		displayAll();
+		// displayHiddenShort();
+
+		// epoch currently has one set
+		// a set consists of the input values and a target
+		// in order to add more sets we just update the input node values and
+		// target
 		do {
 			epochCount++;
-			//// forward pass
-			genAllValues();
-			// displayHiddenShort();
+			for (TrainingSet trainingSet : setAnd) {
+				sumSquaredErrors = 0.0;
+				int count = 0;
+				for (Node node : inputs) {
+					node.setValue(trainingSet.getInputs()[count]);
+					count++;
+				}
+				target = trainingSet.getTarget();
+				
+				
+				//// forward pass
+				genAllValues();
+				// displayHiddenShort();
 
-			//// output error
-			// error = (t - o)(1 - o)o
-			// t = target, o = output
-			genOutputError();
+				//// output error
+				// error = (t - o)(1 - o)o
+				// t = target, o = output
+				genOutputError();
 
-			//// output(weight) update
-			updateOutputWeights();
+				//// output(weight) update
+				updateOutputWeights();
 
-			// System.out.println("Updated Output Weights");
-			// displayHiddenShort();
+				// System.out.println("Updated Output Weights");
+				// displayHiddenShort();
 
-			//// hidden errors
-			genHiddenError();
+				//// hidden errors
+				genHiddenError();
 
-			//// hidden(weight) update
-			updateHiddenWeights();
+				//// hidden(weight) update
+				updateHiddenWeights();
 
-			// System.out.println("Updated Hidden Weights");
-			// displayHiddenShort();
+				// System.out.println("Updated Hidden Weights");
+				// displayHiddenShort();
 
-			displayOutput();
+				
+				sumSquaredErrors += difference * difference;
+				displayOutput();
+			}
+			
+//			System.out.println("\ndifference: " + difference);
+//			System.out.println("errorThreshold: " + errorThreshold);
+//			System.out.println("difference > errorThreshold: " + (difference > errorThreshold));
+		} while (sumSquaredErrors > errorThreshold || sumSquaredErrors < -errorThreshold);
 
-		} while (difference > errorThreshold);
-		
 		System.out.println();
-		displayAll();
-		
+//		displayAll();
+
 		System.out.println("**Final epoch iteration**");
 		displayOutput();
-		
+
 		// an epoch may contain a set of items to test
+	}
+	
+	private void genXorSet() {
+		setXor.add(new TrainingSet(1, 1, 0));
+		setXor.add(new TrainingSet(1, 0, 1));
+		setXor.add(new TrainingSet(0, 1, 1));
+		setXor.add(new TrainingSet(0, 0, 0));
+	}
+
+	private void genOrSet() {
+		setOr.add(new TrainingSet(1, 1, 1));
+		setOr.add(new TrainingSet(1, 0, 1));
+		setOr.add(new TrainingSet(0, 1, 1));
+		setOr.add(new TrainingSet(0, 0, 0));
+	}
+
+	private void genAndSet() {
+		// AND
+		setAnd.add(new TrainingSet(1, 1, 1));
+		setAnd.add(new TrainingSet(1, 0, 0));
+		setAnd.add(new TrainingSet(0, 1, 0));
+		setAnd.add(new TrainingSet(0, 0, 0));
 	}
 
 	private void displayOutput() {
 		for (Node node : outputs) {
 			difference = target - node.getValue();
 			System.out.printf("Epoch #%d\n", epochCount);
+			displayInputsShort();
 			System.out.printf("Target Value:\t\t%f\n", target);
 			System.out.printf("Output Node Value:\t%f\n", node.getValue());
-			System.out.printf("Difference:\t\t%f\n", difference);
+//			System.out.printf("Difference:\t\t%f\n", difference);
+			System.out.printf("sumSquaredErrors:\t%f\n", sumSquaredErrors);
 		}
 	}
 
@@ -90,7 +144,7 @@ public class Runner {
 						* node.getValue();
 				node.setError(hiddenError);
 			}
-//			System.out.printf("hiddenError: %f\n", hiddenError);
+			// System.out.printf("hiddenError: %f\n", hiddenError);
 		}
 		System.out.println();
 	}
@@ -108,7 +162,7 @@ public class Runner {
 				error = (target - output) * (1 - output) * output;
 				node.setError(error);
 			}
-//			System.out.printf("error: %f\n", error);
+			// System.out.printf("error: %f\n", error);
 		}
 	}
 
@@ -126,6 +180,15 @@ public class Runner {
 				// " + newWeight);
 			}
 		}
+	}
+	
+	private void displayInputsShort(){
+		System.out.print("Target: " + target + "\t\t");
+		System.out.print("Inputs:\t\t");
+		for (Node node : inputs) {
+			System.out.print(node.getValue() + "\t\t");
+		}
+		System.out.println();
 	}
 
 	private void displayHiddenShort() {
@@ -202,10 +265,10 @@ public class Runner {
 	}
 
 	private void genAllValues() {
-//		System.out.println("*Generating hidden node values");
+		// System.out.println("*Generating hidden node values");
 		genValues(hidden);
 
-//		System.out.println("*Generating output node values");
+		// System.out.println("*Generating output node values");
 		genValues(outputs);
 	}
 
@@ -217,20 +280,22 @@ public class Runner {
 			nodeCount++;
 			sum = 0;
 
-//			System.out.printf("*node: #%d\n", nodeCount);
+			// System.out.printf("*node: #%d\n", nodeCount);
 			for (Connection connectionFrom : node.getConnectedFrom()) {
 				connectionCount++;
 				value = connectionFrom.getFromNode().getValue() * connectionFrom.getWeight();
 
 				sum += value;
-//				System.out.printf("connection #%d\t\t", connectionCount);
-//				System.out.printf("value: %.5f\t\t", connectionFrom.getFromNode().getValue());
-//				System.out.printf("weight: %.5f\t\t", connectionFrom.getWeight());
-//				System.out.printf("v * w: %.5f\n", value);
+				// System.out.printf("connection #%d\t\t", connectionCount);
+				// System.out.printf("value: %.5f\t\t",
+				// connectionFrom.getFromNode().getValue());
+				// System.out.printf("weight: %.5f\t\t",
+				// connectionFrom.getWeight());
+				// System.out.printf("v * w: %.5f\n", value);
 			}
-//			System.out.printf("sum: %.5f\t\t", sum);
+			// System.out.printf("sum: %.5f\t\t", sum);
 			euler = (double) (1 / (1 + Math.exp(-sum)));
-//			System.out.printf("euler: %.5f\n\n", euler);
+			// System.out.printf("euler: %.5f\n\n", euler);
 			node.setValue(euler);
 		}
 	}
