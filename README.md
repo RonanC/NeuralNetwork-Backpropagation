@@ -68,7 +68,7 @@ The system should be able to distuinguise letters form one another.
 I should be able to then give it letters that are not so perfect (random pixel or two wrong) and it should be able to find the closest match.
 
 ### Refactor
-I want to make the project more modular.
+I want to make the project more modular.  
 Have a system to add more hidden layers at will.
 
 ### Gaming
@@ -77,16 +77,16 @@ and the actions as outputs.
 
 Then the algorithm can learn and get better at the game.
 
-A grid game like snake or breakout would be good.
+A grid game like snake or breakout would be good.  
 We could analyse the game screen, turn it into a grid positive and negative values on each square.
 
 The algorithm should learn in breakout for instance that if the positive cell is coming towards you that you should hit it, but that by breaking a block you get rewarded.
 
-This seems more like reinforcement learning territory.
+This seems more like reinforcement learning territory.  
 We need explicit inputs and outputs for supervised learning.
 
 ### Image recognition
-I could pass it a rastor image, with pixel values on each square.
+I could pass it a rastor image, with pixel values on each square.  
 If I pass it loads of images, of cats and dogs say, it should find patterns in the images and figure it out.
 
 
