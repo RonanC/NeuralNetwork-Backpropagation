@@ -12,14 +12,17 @@ The calculations used come from this book.
 
 ## Epoch calculations
 It took 291 epoch iterations for one entry:  
+```sh
 **Final epoch iteration**  
 Epoch #291  
 Target Value:       1.000000  
 Output Node Value:  0.950049  
 Difference:     0.049951  
+```
 
 When we have a batch of four entries per epoch it gives the following results for each set:  
-**AND** 
+
+**AND**  
 54063  
 27708  
 403987   
